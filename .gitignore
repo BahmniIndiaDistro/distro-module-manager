@@ -1,0 +1,22 @@
+
+#Gradle directories
+.gradle/
+
+#Idea directories
+.idea/
+*.iml
+*.ipr
+*.iws
+
+#Build dirs
+build/
+out/
+classes/
+target/
+
+#OSX specific files
+.DS_Store
+
+#Generated scripts
+*.cql
+*.sql
