@@ -11,8 +11,9 @@ import java.io.IOException;
 import java.util.Map;
 
 public class ReportsInstaller {
-    private static final String MODULE_REPORTS_PATH = "/Users/arjunkhandelwal/Development/projects/bahmni/indiadistro/distro/%s";
-    private static final String BAHMNI_REPORTS_PATH = "/Users/arjunkhandelwal/Development/projects/bahmni/indiadistro/distro/base/india_distro_config/%s";
+
+    private static final String MODULES_DIRECTORY = System.getenv("INDIA_DISTRO_MODULES_DIR");
+    private static final String BAHMNI_CONFIG_DIR = System.getenv("BAHMNI_CONFIG_DIR");
     private static final String BAHMNI_REPORTS_SQL_PATH = "openmrs/apps/reports/sql";
     private static final String OPENMRS_REPORTS_CONFIG_FILE_NAME = "openmrs/apps/reports/reports.json";
 
@@ -21,14 +22,14 @@ public class ReportsInstaller {
     }
 
     public void installForModule(String moduleName) {
-        String moduleBasePath = String.format(MODULE_REPORTS_PATH, moduleName);
-        addConfig(moduleBasePath);
-        addSQLFiles(moduleBasePath);
+        File moduleDirectory = new File(MODULES_DIRECTORY, moduleName);
+        addConfig(moduleDirectory);
+        addSQLFiles(moduleDirectory);
     }
 
-    private void addSQLFiles(String moduleBasePath) {
-        File source = new File(moduleBasePath, BAHMNI_REPORTS_SQL_PATH);
-        File dest = new File(String.format(BAHMNI_REPORTS_PATH, BAHMNI_REPORTS_SQL_PATH));
+    private void addSQLFiles(File moduleDirectory) {
+        File source = new File(moduleDirectory, BAHMNI_REPORTS_SQL_PATH);
+        File dest = new File(BAHMNI_CONFIG_DIR, BAHMNI_REPORTS_SQL_PATH);
         if (!source.exists()) {
             return;
         }
@@ -39,22 +40,20 @@ public class ReportsInstaller {
         }
     }
 
-    private void addConfig(String moduleBasePath) {
+    private void addConfig(File moduleBasePath) {
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             Map<String, Object> moduleReports = objectMapper.readValue(new File(moduleBasePath, OPENMRS_REPORTS_CONFIG_FILE_NAME),
-                    new TypeReference<Map<String, Object>>() {
-                    });
-            Map<String, Object> baseReports = objectMapper.readValue(new File(String.format(BAHMNI_REPORTS_PATH, OPENMRS_REPORTS_CONFIG_FILE_NAME)),
-
-                    new TypeReference<Map<String, Object>>() {
-                    });
+                    new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> baseReports = objectMapper.readValue(new File(BAHMNI_CONFIG_DIR, OPENMRS_REPORTS_CONFIG_FILE_NAME),
+                    new TypeReference<Map<String, Object>>() {});
 
             for (String key : moduleReports.keySet()) {
                 baseReports.put(key, moduleReports.get(key));
             }
+
             objectMapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
-            objectMapper.writeValue(new File(String.format(BAHMNI_REPORTS_PATH, OPENMRS_REPORTS_CONFIG_FILE_NAME)), baseReports);
+            objectMapper.writeValue(new File(BAHMNI_CONFIG_DIR, OPENMRS_REPORTS_CONFIG_FILE_NAME), baseReports);
         } catch (IOException e) {
             throw new RuntimeException("Reports Installation failed", e);
         }
