@@ -10,16 +10,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 
-public class ReportsInstaller {
+import static org.bahmni.indiadistro.ModuleManager.BAHMNI_CONFIG_DIR;
+import static org.bahmni.indiadistro.ModuleManager.MODULES_DIRECTORY;
 
-    private static final String MODULES_DIRECTORY = System.getenv("INDIA_DISTRO_MODULES_DIR");
-    private static final String BAHMNI_CONFIG_DIR = System.getenv("BAHMNI_CONFIG_DIR");
+public class ReportsInstaller {
     private static final String BAHMNI_REPORTS_SQL_PATH = "openmrs/apps/reports/sql";
     private static final String OPENMRS_REPORTS_CONFIG_FILE_NAME = "openmrs/apps/reports/reports.json";
-
-    public static void main(String[] args) {
-        new ReportsInstaller().installForModule("hypertension");
-    }
 
     public void installForModule(String moduleName) {
         File moduleDirectory = new File(MODULES_DIRECTORY, moduleName);
@@ -36,7 +32,7 @@ public class ReportsInstaller {
         try {
             FileUtils.copyDirectory(source, dest);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException("Reports Installation failed", e);
         }
     }
 
