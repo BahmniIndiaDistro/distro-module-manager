@@ -3,10 +3,7 @@ package org.bahmni.indiadistro;
 
 import org.apache.commons.lang3.StringUtils;
 import org.bahmni.indiadistro.config.ApplicationProperties;
-import org.bahmni.indiadistro.installer.DashboardInstaller;
-import org.bahmni.indiadistro.installer.FormInstaller;
-import org.bahmni.indiadistro.installer.ReferenceDataManager;
-import org.bahmni.indiadistro.installer.ReportsInstaller;
+import org.bahmni.indiadistro.installer.*;
 
 import java.io.IOException;
 
@@ -25,11 +22,12 @@ public class ModuleManager {
         System.out.println(String.format("Installing module %s", moduleName));
 
         ApplicationProperties applicationProperties = new ApplicationProperties();
+
         new ReferenceDataManager(applicationProperties).uploadForModule(moduleName);
         new FormInstaller(applicationProperties).installForModule(moduleName);
         new DashboardInstaller(applicationProperties).installForModule(moduleName);
         new ReportsInstaller(applicationProperties).installForModule(moduleName);
-//        new AnalyticsInstaller().installForModule(moduleName);
+        new AnalyticsInstaller(applicationProperties).installForModule(moduleName);
     }
 
 }

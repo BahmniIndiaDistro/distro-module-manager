@@ -10,6 +10,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.bahmni.indiadistro.config.ApplicationProperties;
 import org.bahmni.indiadistro.model.BahmniForm;
 import org.bahmni.indiadistro.model.BahmniFormResource;
+import org.bahmni.indiadistro.util.StringUtil;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
@@ -22,12 +23,12 @@ import java.util.Map;
 import static org.bahmni.indiadistro.util.HttpUtil.*;
 
 public class FormInstaller {
-    private static final String formDirectory = "forms";
-    private static final String bahmniBaseURL = "https://localhost";
-    private static final String openmrsFormURL = "/openmrs/ws/rest/v1/form";
-    private static final String ieSaveFormURL = "/openmrs/ws/rest/v1/bahmniie/form/save";
-    private static final String ieSaveTranslationsURL = "/openmrs/ws/rest/v1/bahmniie/form/saveTranslation";
-    private static final String iePublishFormURLFormat = "/openmrs/ws/rest/v1/bahmniie/form/publish?formUuid=%s";
+    private static final String FORM_DIRECTORY = "forms";
+    private static final String BAHMNI_BASE_URL = "https://localhost";
+    private static final String OPENMRS_FORM_URL = "/openmrs/ws/rest/v1/form";
+    private static final String IE_SAVE_FORM_URL = "/openmrs/ws/rest/v1/bahmniie/form/save";
+    private static final String IE_SAVE_TRANSLATIONS_URL = "/openmrs/ws/rest/v1/bahmniie/form/saveTranslation";
+    private static final String IE_PUBLISH_FORM_URL_FORMAT = "/openmrs/ws/rest/v1/bahmniie/form/publish?formUuid=%s";
 
     private final ObjectMapper objectMapper;
     private ApplicationProperties applicationProperties;
@@ -40,9 +41,10 @@ public class FormInstaller {
 
     public void installForModule(String moduleName) {
         File moduleDirectory = new File(applicationProperties.getIndiaDistroModulesDir(), moduleName);
-        File formsDirectory = new File(moduleDirectory, formDirectory);
+        File formsDirectory = new File(moduleDirectory, FORM_DIRECTORY);
 
         File[] files = formsDirectory.listFiles();
+        if (null == files) return;
         for (File file : files) {
             try {
                 System.out.println(String.format("Starting upload for file %s", file.getName()));
@@ -76,7 +78,7 @@ public class FormInstaller {
         System.out.println("Uploading form metadata");
         try {
             BahmniForm form = new BahmniForm(formName, "1", false);
-            String formMetadataSaveResponse = postToURL(form, openmrsFormURL, HttpStatus.SC_CREATED);
+            String formMetadataSaveResponse = postToURL(form, OPENMRS_FORM_URL, HttpStatus.SC_CREATED);
             return (String) objectMapper.readValue(formMetadataSaveResponse, Map.class).get("uuid");
         } catch (IOException e) {
             throw new RuntimeException(String.format("Problem while uploading form metadata for %s", formName), e);
@@ -96,7 +98,7 @@ public class FormInstaller {
             formResource.setForm(bahmniForm);
             formResource.setValue(objectMapper.writeValueAsString(value));
             formResource.setUuid("");
-            String formSaveResponse = postToURL(formResource, ieSaveFormURL, HttpStatus.SC_OK);
+            String formSaveResponse = postToURL(formResource, IE_SAVE_FORM_URL, HttpStatus.SC_OK);
             return objectMapper.readValue(formSaveResponse, BahmniFormResource.class);
         } catch (IOException e) {
             throw new RuntimeException(String.format("Problem while uploading form metadata for %s", formName), e);
@@ -112,7 +114,7 @@ public class FormInstaller {
             }
         });
         try {
-            postToURL(translations, ieSaveTranslationsURL, HttpStatus.SC_OK);
+            postToURL(translations, IE_SAVE_TRANSLATIONS_URL, HttpStatus.SC_OK);
         } catch (IOException e) {
             throw new RuntimeException(String.format("Problem while uploading form metadata for %s", formSaveResponse.getForm().getName()), e);
         }
@@ -120,7 +122,7 @@ public class FormInstaller {
 
     private void publishForm(String formName, String uuid) {
         System.out.println("Publishing form");
-        String iePublishFormURL = String.format(iePublishFormURLFormat, uuid);
+        String iePublishFormURL = String.format(IE_PUBLISH_FORM_URL_FORMAT, uuid);
         try {
             postToURL(null, iePublishFormURL, HttpStatus.SC_OK);
         } catch (IOException e) {
@@ -130,7 +132,7 @@ public class FormInstaller {
 
     private String postToURL(Object payload, String urlPath, int expectedCode) throws IOException {
         CloseableHttpClient httpClient = createAcceptSelfSignedCertificateClient();
-        HttpPost request = new HttpPost(URI.create(String.format("%s%s", bahmniBaseURL, urlPath)));
+        HttpPost request = new HttpPost(URI.create(formatURL(urlPath)));
         addBasicAuth(request);
         if (null != payload) {
             request.addHeader("Content-Type", "application/json");
@@ -145,6 +147,12 @@ public class FormInstaller {
             throw new IOException(String.format("Unexpected Response code %s while uploading the form with message %s", statusCode, responseText));
         }
         return responseText;
+    }
+
+    private String formatURL(String urlPath) {
+        return String.format("%s%s",
+                StringUtil.ensureSuffix(BAHMNI_BASE_URL, "/"),
+                StringUtil.removePrefix(urlPath, "/"));
     }
 
 }
