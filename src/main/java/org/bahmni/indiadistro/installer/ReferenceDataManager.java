@@ -8,30 +8,26 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.SSLContextBuilder;
-import org.bahmni.indiadistro.config.CSVUploadStatus;
+import org.bahmni.indiadistro.model.CSVUploadStatus;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import javax.net.ssl.SSLContext;
 import java.io.*;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static org.bahmni.indiadistro.ModuleManager.MODULES_DIRECTORY;
+import static org.bahmni.indiadistro.util.HttpUtil.addBasicAuth;
+import static org.bahmni.indiadistro.util.HttpUtil.createAcceptSelfSignedCertificateClient;
+import static org.bahmni.indiadistro.util.HttpUtil.parseContentInputAsString;
 
 public class ReferenceDataManager {
     private static final String referenceTermFilePath = "ref_terms.csv";
     private static final String conceptFilePath = "concepts.csv";
     private static final String conceptSetsFilePath = "concept_sets.csv";
-    private static final String bahmniBaseUrl = "https://192.168.33.101/openmrs/ws/rest/v1/bahmnicore";
-
+    private static final String bahmniBaseUrl = "https://localhost/openmrs/ws/rest/v1/bahmnicore";
 
     public void uploadForModule(String moduleName) {
         File modulesDir = new File(MODULES_DIRECTORY, moduleName);
@@ -114,38 +110,5 @@ public class ReferenceDataManager {
         } else if ("COMPLETED".equalsIgnoreCase(lastStatus.getStatus())) {
             System.out.println(String.format("Upload for %s finished", type));
         }
-    }
-
-    private void addBasicAuth(HttpRequest request) throws UnsupportedEncodingException {
-        String credentials = "superman" + ":" + "Admin123";
-        byte[] base64Credentials = Base64.encodeBase64(credentials.getBytes("UTF-8"));
-        request.addHeader("Authorization", "Basic " + new String(base64Credentials));
-    }
-
-    private String parseContentInputAsString(HttpEntity entity) throws IOException {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(entity.getContent(), StandardCharsets.UTF_8));
-        String inputLine;
-        StringBuilder responseString = new StringBuilder();
-        while ((inputLine = reader.readLine()) != null) {
-            responseString.append(inputLine);
-        }
-        reader.close();
-        return responseString.toString();
-    }
-
-    private CloseableHttpClient createAcceptSelfSignedCertificateClient() {
-        TrustSelfSignedStrategy trustStrategy = new TrustSelfSignedStrategy();
-        SSLContext sslContext;
-        try {
-            sslContext = SSLContextBuilder.create().loadTrustMaterial(trustStrategy).build();
-        } catch (Exception e) {
-            throw new RuntimeException("Problem creating connection for CSV Upload");
-        }
-        SSLConnectionSocketFactory connectionFactory = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
-
-        return HttpClients
-                .custom()
-                .setSSLSocketFactory(connectionFactory)
-                .build();
     }
 }

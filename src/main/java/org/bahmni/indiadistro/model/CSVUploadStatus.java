@@ -1,4 +1,4 @@
-package org.bahmni.indiadistro.config;
+package org.bahmni.indiadistro.model;
 
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;

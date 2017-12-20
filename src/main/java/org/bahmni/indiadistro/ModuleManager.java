@@ -23,8 +23,8 @@ public class ModuleManager {
         String moduleName = StringUtils.trim(args[1]);
         System.out.println(String.format("Installing module %s", moduleName));
 
-        new ReferenceDataManager().uploadForModule(moduleName);
-//        new FormInstaller().installForModule(moduleName);
+//        new ReferenceDataManager().uploadForModule(moduleName);
+        new FormInstaller().installForModule(moduleName);
 //        new DashboardInstaller().installForModule(moduleName);
 //        new ReportsInstaller().installForModule(moduleName);
 //        new AnalyticsInstaller().installForModule(moduleName);
