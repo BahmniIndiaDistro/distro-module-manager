@@ -1,27 +1,23 @@
 package org.bahmni.indiadistro.installer;
 
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpRequest;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.bahmni.indiadistro.config.ApplicationProperties;
 import org.bahmni.indiadistro.model.CSVUploadStatus;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-import static org.bahmni.indiadistro.ModuleManager.MODULES_DIRECTORY;
-import static org.bahmni.indiadistro.util.HttpUtil.addBasicAuth;
-import static org.bahmni.indiadistro.util.HttpUtil.createAcceptSelfSignedCertificateClient;
-import static org.bahmni.indiadistro.util.HttpUtil.parseContentInputAsString;
+import static org.bahmni.indiadistro.util.HttpUtil.*;
 
 public class ReferenceDataManager {
     private static final String referenceTermFilePath = "ref_terms.csv";
@@ -29,8 +25,14 @@ public class ReferenceDataManager {
     private static final String conceptSetsFilePath = "concept_sets.csv";
     private static final String bahmniBaseUrl = "https://localhost/openmrs/ws/rest/v1/bahmnicore";
 
+    private ApplicationProperties applicationProperties;
+
+    public ReferenceDataManager(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
+    }
+
     public void uploadForModule(String moduleName) {
-        File modulesDir = new File(MODULES_DIRECTORY, moduleName);
+        File modulesDir = new File(applicationProperties.getIndiaDistroModulesDir(), moduleName);
         uploadRefTerms(modulesDir);
         uploadConcepts(modulesDir);
         uploadConceptSets(modulesDir);

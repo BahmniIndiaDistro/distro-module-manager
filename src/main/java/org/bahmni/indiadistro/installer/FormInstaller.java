@@ -7,6 +7,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.bahmni.indiadistro.config.ApplicationProperties;
 import org.bahmni.indiadistro.model.BahmniForm;
 import org.bahmni.indiadistro.model.BahmniFormResource;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -18,7 +19,6 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
-import static org.bahmni.indiadistro.ModuleManager.MODULES_DIRECTORY;
 import static org.bahmni.indiadistro.util.HttpUtil.*;
 
 public class FormInstaller {
@@ -30,14 +30,16 @@ public class FormInstaller {
     private static final String iePublishFormURLFormat = "/openmrs/ws/rest/v1/bahmniie/form/publish?formUuid=%s";
 
     private final ObjectMapper objectMapper;
+    private ApplicationProperties applicationProperties;
 
-    public FormInstaller() {
+    public FormInstaller(ApplicationProperties applicationProperties) {
+        this.applicationProperties = applicationProperties;
         objectMapper = new ObjectMapper();
     }
 
 
     public void installForModule(String moduleName) {
-        File moduleDirectory = new File(MODULES_DIRECTORY, moduleName);
+        File moduleDirectory = new File(applicationProperties.getIndiaDistroModulesDir(), moduleName);
         File formsDirectory = new File(moduleDirectory, formDirectory);
 
         File[] files = formsDirectory.listFiles();

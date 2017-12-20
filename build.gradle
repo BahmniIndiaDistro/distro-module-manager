@@ -2,13 +2,19 @@ group 'org.bahmni.indiadistro'
 version '0.1-SNAPSHOT'
 
 apply plugin: 'java'
-apply plugin: 'idea'
+apply plugin: 'rpm'
 
 sourceCompatibility = 1.8
+def mainClassName = "org.bahmni.indiadistro.ModuleManager"
 
 buildscript {
     repositories {
         mavenCentral()
+    }
+    dependencies {
+        classpath(
+                'com.netflix.nebula:gradle-ospackage-plugin:2.+'
+        )
     }
 }
 
@@ -18,20 +24,11 @@ repositories {
 
 jar {
     from {
-        configurations.runtime.collect {
-            it.isDirectory() ? it : zipTree(it)
-        }
-        configurations.compile.collect {
-            it.isDirectory() ? it : zipTree(it)
-        }
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
     }
-
     manifest {
-        attributes 'Main-Class': 'org.bahmni.indiadistro.ModuleManager',
-                'Class-Path': '.'
+        attributes 'Main-Class': mainClassName
     }
-
-    exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
 }
 
 dependencies {
@@ -48,3 +45,46 @@ dependencies {
 task wrapper(type: Wrapper) {
     gradleVersion = '2.12'
 }
+
+private static Properties loadConfig() {
+    Properties properties = new Properties()
+    properties.load(new FileInputStream(new File('env/local.properties')));
+    properties
+}
+
+task assembly(dependsOn: 'build')  {
+    doLast {
+        new File("${buildDir}/etc/").mkdir();
+    }
+}
+
+task exportProperties(dependsOn: 'assembly') {
+    doLast {
+        PrintStream output = new PrintStream(new FileOutputStream(file("${buildDir}/etc/distro-module-manager")));
+        Properties properties = loadConfig()
+        properties.each { prop, val ->
+            output.println("export " + prop + "=" + val)
+        }
+    }
+}
+
+task dist(dependsOn: 'exportProperties', type: Rpm) {
+    packageName = 'distro-module-manager'
+    version = '0.1'
+    arch = NOARCH
+    os = LINUX
+
+    into '/opt/distro-module-manager'
+
+    from("${buildDir}/etc") {
+        fileMode = 0755
+        into 'etc'
+    }
+
+
+    from("${buildDir}/libs") {
+        fileMode = 0755
+        into 'lib'
+    }
+}
+
