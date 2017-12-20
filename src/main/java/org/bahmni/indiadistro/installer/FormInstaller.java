@@ -9,7 +9,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.bahmni.indiadistro.model.BahmniForm;
 import org.bahmni.indiadistro.model.BahmniFormResource;
-import org.bahmni.indiadistro.model.FormTranslation;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 
@@ -18,7 +17,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 import static org.bahmni.indiadistro.ModuleManager.MODULES_DIRECTORY;
 import static org.bahmni.indiadistro.util.HttpUtil.*;
@@ -57,7 +55,7 @@ public class FormInstaller {
                 });
 
         Map<String, Object> formJson = (Map) formData.get("formJson");
-        FormTranslation[] translations = objectMapper.readValue((String) formData.get("translations"), FormTranslation[].class);
+        List<Map<String, Object>> translations = (List<Map<String, Object>>) formData.get("translations");
 
         String formName = (String) formJson.get("name");
         List<Map<String, Object>> resources = (List<Map<String, Object>>) formJson.get("resources");
@@ -92,7 +90,6 @@ public class FormInstaller {
             formResource.setForm(bahmniForm);
             formResource.setValue(objectMapper.writeValueAsString(value));
             formResource.setUuid("");
-
             String formSaveResponse = postJSON(formResource, ieSaveFormURL);
             return objectMapper.readValue(formSaveResponse, BahmniFormResource.class);
         } catch (IOException e) {
@@ -100,12 +97,12 @@ public class FormInstaller {
         }
     }
 
-    private void uploadFormTranslations(FormTranslation[] translations, BahmniFormResource formSaveResponse) {
+    private void uploadFormTranslations(List<Map<String, Object>> translations, BahmniFormResource formSaveResponse) {
         System.out.println("Uploading form translations");
-        Stream.of(translations).forEach(formTranslation -> {
+        translations.forEach(formTranslation -> {
             String version = formSaveResponse.getForm().getVersion();
             if (StringUtils.isNotBlank(version)) {
-                formTranslation.setVersion(version);
+                formTranslation.put("version", version);
             }
         });
         try {
