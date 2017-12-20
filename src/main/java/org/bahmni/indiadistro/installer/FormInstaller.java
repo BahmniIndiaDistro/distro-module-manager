@@ -27,6 +27,8 @@ public class FormInstaller {
     private static final String openmrsFormURL = "/openmrs/ws/rest/v1/form";
     private static final String ieSaveFormURL = "/openmrs/ws/rest/v1/bahmniie/form/save";
     private static final String ieSaveTranslationsURL = "/openmrs/ws/rest/v1/bahmniie/form/saveTranslation";
+    private static final String iePublishFormURLFormat = "/openmrs/ws/rest/v1/bahmniie/form/publish?formUuid=%s";
+
     private final ObjectMapper objectMapper;
 
     public FormInstaller() {
@@ -41,6 +43,7 @@ public class FormInstaller {
         File[] files = formsDirectory.listFiles();
         for (File file : files) {
             try {
+                System.out.println(String.format("Starting upload for file %s", file.getName()));
                 uploadForm(file);
             } catch (IOException e) {
                 //log error
@@ -64,13 +67,14 @@ public class FormInstaller {
         String uuid = uploadFormMetadata(formName);
         BahmniFormResource formSaveResponse = uploadFormResource(formName, value, uuid);
         uploadFormTranslations(translations, formSaveResponse);
+        publishForm(formName, uuid);
     }
 
     private String uploadFormMetadata(String formName) {
         System.out.println("Uploading form metadata");
         try {
             BahmniForm form = new BahmniForm(formName, "1", false);
-            String formMetadataSaveResponse = postJSON(form, openmrsFormURL);
+            String formMetadataSaveResponse = postToURL(form, openmrsFormURL, HttpStatus.SC_CREATED);
             return (String) objectMapper.readValue(formMetadataSaveResponse, Map.class).get("uuid");
         } catch (IOException e) {
             throw new RuntimeException(String.format("Problem while uploading form metadata for %s", formName), e);
@@ -90,7 +94,7 @@ public class FormInstaller {
             formResource.setForm(bahmniForm);
             formResource.setValue(objectMapper.writeValueAsString(value));
             formResource.setUuid("");
-            String formSaveResponse = postJSON(formResource, ieSaveFormURL);
+            String formSaveResponse = postToURL(formResource, ieSaveFormURL, HttpStatus.SC_OK);
             return objectMapper.readValue(formSaveResponse, BahmniFormResource.class);
         } catch (IOException e) {
             throw new RuntimeException(String.format("Problem while uploading form metadata for %s", formName), e);
@@ -106,24 +110,36 @@ public class FormInstaller {
             }
         });
         try {
-            postJSON(translations, ieSaveTranslationsURL);
+            postToURL(translations, ieSaveTranslationsURL, HttpStatus.SC_OK);
         } catch (IOException e) {
             throw new RuntimeException(String.format("Problem while uploading form metadata for %s", formSaveResponse.getForm().getName()), e);
         }
     }
 
-    private String postJSON(Object payload, String urlPath) throws IOException {
+    private void publishForm(String formName, String uuid) {
+        System.out.println("Publishing form");
+        String iePublishFormURL = String.format(iePublishFormURLFormat, uuid);
+        try {
+            postToURL(null, iePublishFormURL, HttpStatus.SC_OK);
+        } catch (IOException e) {
+            throw new RuntimeException(String.format("Problem while publishing form %s", formName), e);
+        }
+    }
+
+    private String postToURL(Object payload, String urlPath, int expectedCode) throws IOException {
         CloseableHttpClient httpClient = createAcceptSelfSignedCertificateClient();
         HttpPost request = new HttpPost(URI.create(String.format("%s%s", bahmniBaseURL, urlPath)));
         addBasicAuth(request);
-        request.addHeader("Content-Type", "application/json");
-        StringEntity entity = new StringEntity(objectMapper.writeValueAsString(payload), ContentType.APPLICATION_JSON);
-        request.setEntity(entity);
+        if (null != payload) {
+            request.addHeader("Content-Type", "application/json");
+            StringEntity entity = new StringEntity(objectMapper.writeValueAsString(payload), ContentType.APPLICATION_JSON);
+            request.setEntity(entity);
+        }
 
         CloseableHttpResponse httpResponse = httpClient.execute(request);
         int statusCode = httpResponse.getStatusLine().getStatusCode();
         String responseText = parseContentInputAsString(httpResponse.getEntity());
-        if (HttpStatus.SC_CREATED != statusCode) {
+        if (expectedCode != statusCode) {
             throw new IOException(String.format("Unexpected Response code %s while uploading the form with message %s", statusCode, responseText));
         }
         return responseText;
