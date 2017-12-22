@@ -21,7 +21,7 @@ public class ModuleManager {
         String moduleName = StringUtils.trim(args[1]);
         System.out.println(String.format("Installing module %s", moduleName));
 
-        ApplicationProperties applicationProperties = new ApplicationProperties();
+        ApplicationProperties applicationProperties = new ApplicationProperties(System.getenv());
 
         new ReferenceDataManager(applicationProperties).uploadForModule(moduleName);
         new FormInstaller(applicationProperties).installForModule(moduleName);

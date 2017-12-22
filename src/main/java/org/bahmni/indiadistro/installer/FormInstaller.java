@@ -24,7 +24,6 @@ import static org.bahmni.indiadistro.util.HttpUtil.*;
 
 public class FormInstaller {
     private static final String FORM_DIRECTORY = "forms";
-    private static final String BAHMNI_BASE_URL = "https://localhost";
     private static final String OPENMRS_FORM_URL = "/openmrs/ws/rest/v1/form";
     private static final String IE_SAVE_FORM_URL = "/openmrs/ws/rest/v1/bahmniie/form/save";
     private static final String IE_SAVE_TRANSLATIONS_URL = "/openmrs/ws/rest/v1/bahmniie/form/saveTranslation";
@@ -133,7 +132,7 @@ public class FormInstaller {
     private String postToURL(Object payload, String urlPath, int expectedCode) throws IOException {
         CloseableHttpClient httpClient = createAcceptSelfSignedCertificateClient();
         HttpPost request = new HttpPost(URI.create(formatURL(urlPath)));
-        addBasicAuth(request);
+        addBasicAuth(request, applicationProperties);
         if (null != payload) {
             request.addHeader("Content-Type", "application/json");
             StringEntity entity = new StringEntity(objectMapper.writeValueAsString(payload), ContentType.APPLICATION_JSON);
@@ -151,7 +150,7 @@ public class FormInstaller {
 
     private String formatURL(String urlPath) {
         return String.format("%s%s",
-                StringUtil.ensureSuffix(BAHMNI_BASE_URL, "/"),
+                StringUtil.ensureSuffix(applicationProperties.getOpenmrsBaseURL(), "/"),
                 StringUtil.removePrefix(urlPath, "/"));
     }
 

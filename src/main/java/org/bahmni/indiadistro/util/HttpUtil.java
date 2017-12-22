@@ -9,6 +9,7 @@ import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContextBuilder;
+import org.bahmni.indiadistro.config.ApplicationProperties;
 
 import javax.net.ssl.SSLContext;
 import java.io.BufferedReader;
@@ -34,8 +35,8 @@ public class HttpUtil {
                 .build();
     }
 
-    public static void addBasicAuth(HttpRequest request) throws UnsupportedEncodingException {
-        String credentials = "username" + ":" + "password";
+    public static void addBasicAuth(HttpRequest request, ApplicationProperties applicationProperties) throws UnsupportedEncodingException {
+        String credentials = String.format("%s:%s", applicationProperties.getOpenmrsAPIUserName(), applicationProperties.getOpenmrsAPIUserPassword());
         byte[] base64Credentials = Base64.encodeBase64(credentials.getBytes("UTF-8"));
         request.addHeader("Authorization", "Basic " + new String(base64Credentials));
     }

@@ -10,7 +10,6 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.bahmni.indiadistro.config.ApplicationProperties;
 import org.bahmni.indiadistro.model.CSVUploadStatus;
-import org.bahmni.indiadistro.util.StringUtil;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.File;
@@ -19,13 +18,15 @@ import java.net.URI;
 import java.util.Arrays;
 
 import static org.bahmni.indiadistro.util.HttpUtil.*;
+import static org.bahmni.indiadistro.util.StringUtil.removePrefix;
+import static org.bahmni.indiadistro.util.StringUtil.removeSuffix;
 
 public class ReferenceDataManager {
     private static final String REFERENCE_TERM_FILE_PATH = "ref_terms.csv";
     private static final String CONCEPT_FILE_PATH = "concepts.csv";
     private static final String CONCEPT_SETS_FILE_PATH = "concept_sets.csv";
 
-    private static final String BAHMNI_BASE_URL = "https://localhost/openmrs/ws/rest/v1/bahmnicore";
+    private static final String BAHMNI_CORE_CONTEXT_PATH = "openmrs/ws/rest/v1/bahmnicore";
     private static final String REF_TERM_UPLOAD_URL_PATH = "admin/upload/referenceterms";
     private static final String CONCEPT_UPLOAD_URL_PATH = "admin/upload/concept";
     private static final String CONCEPT_SET_UPLOAD_URL_PATH = "admin/upload/conceptset";
@@ -46,9 +47,9 @@ public class ReferenceDataManager {
 
     private void uploadRefTerms(File modulesDir) {
         try {
-            uploadAndCheckStatus(modulesDir, REFERENCE_TERM_FILE_PATH, REF_TERM_UPLOAD_URL_PATH, "REF TERMS");
+            uploadAndCheckStatus(modulesDir, REFERENCE_TERM_FILE_PATH, REF_TERM_UPLOAD_URL_PATH, "REF TERMs");
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Problem while uploading the reference terms");
+            throw new RuntimeException("Problem while uploading the reference terms", e);
         }
     }
 
@@ -56,7 +57,7 @@ public class ReferenceDataManager {
         try {
             uploadAndCheckStatus(modulesDir, CONCEPT_FILE_PATH, CONCEPT_UPLOAD_URL_PATH, "Concepts");
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Problem while uploading the Concepts");
+            throw new RuntimeException("Problem while uploading the Concepts", e);
         }
     }
 
@@ -64,17 +65,17 @@ public class ReferenceDataManager {
         try {
             uploadAndCheckStatus(modulesDir, CONCEPT_SETS_FILE_PATH, CONCEPT_SET_UPLOAD_URL_PATH, "Concept Sets");
         } catch (IOException | InterruptedException e) {
-            throw new RuntimeException("Problem while uploading the Concept Sets");
+            throw new RuntimeException("Problem while uploading the Concept Sets", e);
         }
     }
 
     private void uploadAndCheckStatus(File modulesDir, String filePath, String urlPath, String type) throws IOException, InterruptedException {
         File fileToUpload = new File(modulesDir, filePath);
-        String uploadURL = formatURL(BAHMNI_BASE_URL, urlPath);
+        String uploadURL = formatURL(urlPath);
 
         CloseableHttpClient httpClient = createAcceptSelfSignedCertificateClient();
         HttpPost request = new HttpPost(URI.create(uploadURL));
-        addBasicAuth(request);
+        addBasicAuth(request, applicationProperties);
 
         MultipartEntityBuilder builder = MultipartEntityBuilder.create();
         builder.addBinaryBody("file", fileToUpload);
@@ -87,16 +88,16 @@ public class ReferenceDataManager {
             throw new IOException(String.format("Unexpected Response code %s while uploading %s", statusCode, type));
         }
 
-        Thread.sleep(3000);
+        Thread.sleep(applicationProperties.getWaitIntervalForCSVUpload());
         checkIfDone(type);
     }
 
     private void checkIfDone(String type) throws IOException, InterruptedException {
-        String uploadStatusUrl = formatURL(BAHMNI_BASE_URL, UPLOAD_STATUS_URL_PATH);
+        String uploadStatusUrl = formatURL(UPLOAD_STATUS_URL_PATH);
 
         CloseableHttpClient httpClient = createAcceptSelfSignedCertificateClient();
         HttpGet request = new HttpGet(URI.create(uploadStatusUrl));
-        addBasicAuth(request);
+        addBasicAuth(request, applicationProperties);
 
         CloseableHttpResponse httpResponse = httpClient.execute(request);
         int statusCode = httpResponse.getStatusLine().getStatusCode();
@@ -108,18 +109,19 @@ public class ReferenceDataManager {
         CSVUploadStatus lastStatus = Arrays.asList(objectMapper.readValue(response, CSVUploadStatus[].class)).get(0);
         if ("IN_PROGRESS".equalsIgnoreCase(lastStatus.getStatus())) {
             System.out.println(String.format("The upload for %s is in progress", type));
-            Thread.sleep(3000);
+            Thread.sleep(applicationProperties.getWaitIntervalForCSVUpload());
             checkIfDone(type);
         } else if ("COMPLETED_WITH_ERRORS".equalsIgnoreCase(lastStatus.getStatus())) {
-            throw new RuntimeException(String.format("Problem while uploading %s. The error file is %s", lastStatus.getErrorFileName(), type));
+            throw new RuntimeException(String.format("Problem while uploading %s. The error file is %s", type, lastStatus.getErrorFileName()));
         } else if ("COMPLETED".equalsIgnoreCase(lastStatus.getStatus())) {
             System.out.println(String.format("Upload for %s finished", type));
         }
     }
 
-    private String formatURL(String baseUrl, String urlPath) {
-        return String.format("%s%s",
-                StringUtil.ensureSuffix(baseUrl, "/"),
-                StringUtil.removePrefix(urlPath, "/"));
+    private String formatURL(String urlPath) {
+        return String.format("%s/%s/%s",
+                removeSuffix(applicationProperties.getOpenmrsBaseURL(), "/"),
+                removePrefix(removeSuffix(BAHMNI_CORE_CONTEXT_PATH, "/"), "/"),
+                removePrefix(urlPath, "/"));
     }
 }

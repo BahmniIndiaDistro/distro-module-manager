@@ -7,6 +7,15 @@ import org.codehaus.jackson.annotate.JsonProperty;
 @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY, getterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CSVUploadStatus {
+    public CSVUploadStatus(String id, String errorFileName, String status) {
+        this.id = id;
+        this.errorFileName = errorFileName;
+        this.status = status;
+    }
+
+    public CSVUploadStatus() {
+    }
+
     @JsonProperty("id")
     private String id;
     @JsonProperty("errorFileName")
