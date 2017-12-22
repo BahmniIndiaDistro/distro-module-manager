@@ -77,15 +77,31 @@ task dist(dependsOn: 'exportProperties', type: Rpm) {
 
     into '/opt/distro-module-manager'
 
+    postInstall = file('scripts/utils/postInstall.sh')
+    preUninstall = file('scripts/utils/preUninstall.sh')
+    postUninstall = file('scripts/utils/postUninstall.sh')
+
     from("${buildDir}/etc") {
         fileMode = 0755
         into 'etc'
     }
 
+    from("scripts/rpm") {
+        fileMode = 0755
+        exclude 'placeholder'
+        into 'bin'
+    }
 
     from("${buildDir}/libs") {
         fileMode = 0755
         into 'lib'
+    }
+
+    from("scripts/rpm") {
+        fileMode = 0755
+        exclude 'distro-module-manager'
+        exclude 'start.sh'
+        into 'var'
     }
 }
 
