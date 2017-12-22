@@ -70,6 +70,20 @@ public class ReferenceDataManagerTest {
         verify(3, getRequestedFor(urlMatching(csvUploadURLPrefix + "status")));
     }
 
+    @Test(expected = RuntimeException.class)
+    public void shouldThrowErrorWhenUploadRequestFails() throws Exception {
+        stubFor(post(urlEqualTo(csvUploadURLPrefix + "referenceterms"))
+                .willReturn(aResponse().withStatus(500))
+        );
+
+        referenceDataManager.uploadForModule("htn");
+
+        verify(0, postRequestedFor(urlMatching(csvUploadURLPrefix + "concept")));
+        verify(1, postRequestedFor(urlMatching(csvUploadURLPrefix + "referenceterms")));
+        verify(0, postRequestedFor(urlMatching(csvUploadURLPrefix + "conceptset")));
+        verify(0, getRequestedFor(urlMatching(csvUploadURLPrefix + "status")));
+    }
+
     @Test
     public void shouldKeepCheckingTheStatusUntilCompleted() throws Exception {
         scenariosForRefTerms();

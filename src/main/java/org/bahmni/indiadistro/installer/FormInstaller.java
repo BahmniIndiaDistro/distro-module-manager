@@ -24,10 +24,10 @@ import static org.bahmni.indiadistro.util.HttpUtil.*;
 
 public class FormInstaller {
     private static final String FORM_DIRECTORY = "forms";
-    private static final String OPENMRS_FORM_URL = "/openmrs/ws/rest/v1/form";
-    private static final String IE_SAVE_FORM_URL = "/openmrs/ws/rest/v1/bahmniie/form/save";
-    private static final String IE_SAVE_TRANSLATIONS_URL = "/openmrs/ws/rest/v1/bahmniie/form/saveTranslation";
-    private static final String IE_PUBLISH_FORM_URL_FORMAT = "/openmrs/ws/rest/v1/bahmniie/form/publish?formUuid=%s";
+    static final String OPENMRS_FORM_URL = "/openmrs/ws/rest/v1/form";
+    static final String IE_SAVE_FORM_URL = "/openmrs/ws/rest/v1/bahmniie/form/save";
+    static final String IE_SAVE_TRANSLATIONS_URL = "/openmrs/ws/rest/v1/bahmniie/form/saveTranslation";
+    static final String IE_PUBLISH_FORM_URL_FORMAT = "/openmrs/ws/rest/v1/bahmniie/form/publish?formUuid=%s";
 
     private final ObjectMapper objectMapper;
     private ApplicationProperties applicationProperties;
