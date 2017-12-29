@@ -7,6 +7,7 @@ apply plugin: 'rpm'
 sourceCompatibility = 1.8
 def mainClassName = "org.bahmni.indiadistro.ModuleManager"
 
+
 buildscript {
     repositories {
         mavenCentral()
@@ -53,7 +54,7 @@ private static Properties loadConfig() {
     properties
 }
 
-task assembly(dependsOn: 'build')  {
+task assembly(dependsOn: 'build') {
     doLast {
         new File("${buildDir}/etc/").mkdir();
     }
@@ -69,7 +70,22 @@ task exportProperties(dependsOn: 'assembly') {
     }
 }
 
-task dist(dependsOn: 'exportProperties', type: Rpm) {
+task downloadDistroZip(dependsOn: 'build') {
+    doLast {
+        def distroZipUrl = 'https://github.com/BahmniIndiaDistro/distro/archive/master.zip'
+        def distroZipFile = new File("${buildDir}/resources/distro.zip")
+        if (!distroZipFile.exists()) {
+            distroZipFile << new URL(distroZipUrl).openStream()
+        }
+    }
+}
+
+task downloadAndExtractDistroZip(dependsOn: 'downloadDistroZip', type: Copy) {
+    from zipTree(new File("${buildDir}/resources/distro.zip"))
+    into new File("${buildDir}/resources/")
+}
+
+task dist(dependsOn: ['exportProperties', 'downloadAndExtractDistroZip'], type: Rpm) {
     packageName = 'distro-module-manager'
     version = '0.1'
     arch = NOARCH
@@ -77,31 +93,36 @@ task dist(dependsOn: 'exportProperties', type: Rpm) {
 
     into '/opt/distro-module-manager'
 
-    postInstall = file('scripts/utils/postInstall.sh')
-    preUninstall = file('scripts/utils/preUninstall.sh')
-    postUninstall = file('scripts/utils/postUninstall.sh')
+//    postInstall = file('scripts/utils/postInstall.sh')
+//    preUninstall = file('scripts/utils/preUninstall.sh')
+//    postUninstall = file('scripts/utils/postUninstall.sh')
 
     from("${buildDir}/etc") {
         fileMode = 0755
         into 'etc'
     }
 
-    from("scripts/rpm") {
+    from("${buildDir}/resources/distro-master") {
         fileMode = 0755
-        exclude 'placeholder'
-        into 'bin'
+        into 'distro'
     }
+
+//    from("scripts/rpm") {
+//        fileMode = 0755
+//        exclude 'placeholder'
+//        into 'bin'
+//    }
 
     from("${buildDir}/libs") {
         fileMode = 0755
         into 'lib'
     }
 
-    from("scripts/rpm") {
-        fileMode = 0755
-        exclude 'distro-module-manager'
-        exclude 'start.sh'
-        into 'var'
-    }
+//    from("scripts/rpm") {
+//        fileMode = 0755
+//        exclude 'distro-module-manager'
+//        exclude 'start.sh'
+//        into 'var'
+//    }
 }
 
