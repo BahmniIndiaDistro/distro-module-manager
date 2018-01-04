@@ -20,6 +20,7 @@ public class AnalyticsInstaller {
     }
 
     public void installForModule(String moduleName) throws IOException {
+        System.out.println(String.format("Installing Analytics for %s", moduleName));
         File moduleDirectory = new File(applicationProperties.getIndiaDistroModulesDir(), moduleName);
 
 

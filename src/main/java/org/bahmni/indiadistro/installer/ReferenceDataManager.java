@@ -39,6 +39,7 @@ public class ReferenceDataManager {
     }
 
     public void uploadForModule(String moduleName) {
+        System.out.println(String.format("Installing Reference Data for %s", moduleName));
         File moduleDirectory = new File(applicationProperties.getIndiaDistroModulesDir(), moduleName);
         uploadRefTerms(moduleDirectory);
         uploadConcepts(moduleDirectory);

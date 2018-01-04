@@ -21,6 +21,7 @@ public class ReportsInstaller {
     }
 
     public void installForModule(String moduleName) {
+        System.out.println(String.format("Installing Reports for %s", moduleName));
         File moduleDirectory = new File(applicationProperties.getIndiaDistroModulesDir(), moduleName);
         addConfig(moduleDirectory);
         addSQLFiles(moduleDirectory);

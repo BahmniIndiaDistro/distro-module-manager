@@ -39,6 +39,7 @@ public class FormInstaller {
 
 
     public void installForModule(String moduleName) {
+        System.out.println(String.format("Installing Forms for %s", moduleName));
         File moduleDirectory = new File(applicationProperties.getIndiaDistroModulesDir(), moduleName);
         File formsDirectory = new File(moduleDirectory, FORM_DIRECTORY);
 

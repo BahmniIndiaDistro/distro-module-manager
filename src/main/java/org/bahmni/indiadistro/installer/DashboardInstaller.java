@@ -19,6 +19,7 @@ public class DashboardInstaller {
     }
 
     public void installForModule(String moduleName) {
+        System.out.println(String.format("Installing Dashboards for %s", moduleName));
         File pathToModule = new File(applicationProperties.getIndiaDistroModulesDir(), moduleName);
         File sourceDashboardFile = new File(pathToModule, DASHBOARD_FILE_PATH);
         File destinationDashboardFile = new File(applicationProperties.getBahmniConfigDir(), DASHBOARD_FILE_PATH);
