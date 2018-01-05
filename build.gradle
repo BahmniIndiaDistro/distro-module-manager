@@ -89,6 +89,7 @@ task dist(dependsOn: ['exportProperties', 'downloadAndExtractDistroZip'], type: 
     packageName = 'distro-module-manager'
     version = '0.1'
     arch = NOARCH
+    user = 'bahmni'
     os = LINUX
 
     into '/opt/distro-module-manager'
@@ -102,14 +103,27 @@ task dist(dependsOn: ['exportProperties', 'downloadAndExtractDistroZip'], type: 
         into 'etc'
     }
 
-    from("${buildDir}/resources/distro-master") {
+    from("scripts/rpm") {
         fileMode = 0755
-        into 'distro'
+        exclude 'placeholder'
+        into 'bin'
     }
 
     from("${buildDir}/libs") {
         fileMode = 0755
         into 'lib'
+    }
+
+    from("scripts/rpm") {
+        fileMode = 0755
+        exclude 'distro-module-manager'
+        exclude 'start.sh'
+        into 'var'
+    }
+
+    from("${buildDir}/resources/distro-master") {
+        fileMode = 0755
+        into 'distro'
     }
 }
 
