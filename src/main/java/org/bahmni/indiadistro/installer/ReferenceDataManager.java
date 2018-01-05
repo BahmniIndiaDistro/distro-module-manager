@@ -8,6 +8,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bahmni.indiadistro.config.ApplicationProperties;
 import org.bahmni.indiadistro.model.CSVUploadStatus;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -34,12 +36,16 @@ public class ReferenceDataManager {
 
     private ApplicationProperties applicationProperties;
 
+    private static final Logger logger = LogManager.getLogger(ReferenceDataManager.class);
+
     public ReferenceDataManager(ApplicationProperties applicationProperties) {
         this.applicationProperties = applicationProperties;
     }
 
     public void uploadForModule(String moduleName) {
-        System.out.println(String.format("Installing Reference Data for %s", moduleName));
+        String message = String.format("Installing Reference Data for %s", moduleName);
+        System.out.println(message);
+        logger.info(message);
         File moduleDirectory = new File(applicationProperties.getIndiaDistroModulesDir(), moduleName);
         uploadRefTerms(moduleDirectory);
         uploadConcepts(moduleDirectory);
@@ -109,13 +115,17 @@ public class ReferenceDataManager {
         ObjectMapper objectMapper = new ObjectMapper();
         CSVUploadStatus lastStatus = Arrays.asList(objectMapper.readValue(response, CSVUploadStatus[].class)).get(0);
         if ("IN_PROGRESS".equalsIgnoreCase(lastStatus.getStatus())) {
-            System.out.println(String.format("The upload for %s is in progress", type));
+            String message = String.format("The upload for %s is in progress", type);
+            System.out.println(message);
+            logger.debug(message);
             Thread.sleep(applicationProperties.getWaitIntervalForCSVUpload());
             checkIfDone(type);
         } else if ("COMPLETED_WITH_ERRORS".equalsIgnoreCase(lastStatus.getStatus())) {
             throw new RuntimeException(String.format("Problem while uploading %s. The error file is %s", type, lastStatus.getErrorFileName()));
         } else if ("COMPLETED".equalsIgnoreCase(lastStatus.getStatus())) {
-            System.out.println(String.format("Upload for %s finished", type));
+            String message = String.format("Upload for %s finished", type);
+            logger.debug(message);
+            System.out.println(message);
         }
     }
 

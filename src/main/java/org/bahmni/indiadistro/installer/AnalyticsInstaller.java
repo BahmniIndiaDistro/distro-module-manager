@@ -1,6 +1,8 @@
 package org.bahmni.indiadistro.installer;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bahmni.indiadistro.config.ApplicationProperties;
 
 import java.io.File;
@@ -13,17 +15,20 @@ public class AnalyticsInstaller {
     private static final String CONFIG_FILE_PATH = "analytics/config.json";
     private static final String DASHBOARD_FILE_PATH = "analytics/dashboard.json";
     private static final String COL_DEF_FILE_PATH = "analytics/columns.json";
+
     private ApplicationProperties applicationProperties;
+    private static final Logger logger = LogManager.getLogger(AnalyticsInstaller.class);
 
     public AnalyticsInstaller(ApplicationProperties applicationProperties) {
         this.applicationProperties = applicationProperties;
     }
 
     public void installForModule(String moduleName) throws IOException {
-        System.out.println(String.format("Installing Analytics for %s", moduleName));
+        String message = String.format("Installing Analytics for %s", moduleName);
+        System.out.println(message);
+        logger.info(message);
+
         File moduleDirectory = new File(applicationProperties.getIndiaDistroModulesDir(), moduleName);
-
-
         File modulePluginFolder = new File(ANALYTICS_PLUGINS_FOLDER_PATH, moduleName);
 
         File sourceDaoFile = new File(moduleDirectory, DAO_FILE_PATH);

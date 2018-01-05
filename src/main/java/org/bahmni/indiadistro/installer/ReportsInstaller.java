@@ -2,6 +2,8 @@ package org.bahmni.indiadistro.installer;
 
 
 import org.apache.commons.io.FileUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bahmni.indiadistro.config.ApplicationProperties;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
@@ -16,12 +18,17 @@ public class ReportsInstaller {
     private static final String OPENMRS_REPORTS_CONFIG_FILE_NAME = "openmrs/apps/reports/reports.json";
     private ApplicationProperties applicationProperties;
 
+    private static final Logger logger = LogManager.getLogger(ReportsInstaller.class);
+
     public ReportsInstaller(ApplicationProperties applicationProperties) {
         this.applicationProperties = applicationProperties;
     }
 
     public void installForModule(String moduleName) {
-        System.out.println(String.format("Installing Reports for %s", moduleName));
+        String message = String.format("Installing Reports for %s", moduleName);
+        System.out.println(message);
+        logger.info(message);
+
         File moduleDirectory = new File(applicationProperties.getIndiaDistroModulesDir(), moduleName);
         addConfig(moduleDirectory);
         addSQLFiles(moduleDirectory);

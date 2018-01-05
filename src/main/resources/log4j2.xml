@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Appenders>
+        <Console name="console-log" target="SYSTEM_OUT">
+            <PatternLayout pattern="%-5p %c{1} - %m%n"/>
+        </Console>
+        <RollingFile name="VAR_LOG" fileName="/var/log/distro-module-manager/distro-module-manager.log"
+                     filePattern="/var/log/distro-module-manager/distro-module-manager.log.%d{dd-MM-yyyy}">
+            <PatternLayout>
+                <pattern>%d{dd-MM-yyyy HH:mm:ss} [%-5p] %c{1} - %m%n</pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+            </Policies>
+        </RollingFile>
+    </Appenders>
+    <Loggers>
+        <Logger name="org.bahmni.indiadistro" level="${env:LOG_LEVEL}" additivity="false">
+            <appender-ref ref="VAR_LOG"/>
+        </Logger>
+    </Loggers>
+</Configuration>

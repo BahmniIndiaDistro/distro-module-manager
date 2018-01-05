@@ -1,6 +1,8 @@
 package org.bahmni.indiadistro.installer;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bahmni.indiadistro.config.ApplicationProperties;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
@@ -14,12 +16,17 @@ public class DashboardInstaller {
     private static final String DASHBOARD_FILE_PATH = "openmrs/apps/clinical/dashboard.json";
     private ApplicationProperties applicationProperties;
 
+    private static final Logger logger = LogManager.getLogger(DashboardInstaller.class);
+
+
     public DashboardInstaller(ApplicationProperties applicationProperties) {
         this.applicationProperties = applicationProperties;
     }
 
     public void installForModule(String moduleName) {
-        System.out.println(String.format("Installing Dashboards for %s", moduleName));
+        String message = String.format("Installing Dashboards for %s", moduleName);
+        System.out.println(message);
+        logger.info(message);
         File pathToModule = new File(applicationProperties.getIndiaDistroModulesDir(), moduleName);
         File sourceDashboardFile = new File(pathToModule, DASHBOARD_FILE_PATH);
         File destinationDashboardFile = new File(applicationProperties.getBahmniConfigDir(), DASHBOARD_FILE_PATH);

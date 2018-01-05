@@ -7,6 +7,8 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bahmni.indiadistro.config.ApplicationProperties;
 import org.bahmni.indiadistro.model.BahmniForm;
 import org.bahmni.indiadistro.model.BahmniFormResource;
@@ -31,6 +33,7 @@ public class FormInstaller {
 
     private final ObjectMapper objectMapper;
     private ApplicationProperties applicationProperties;
+    private static final Logger logger = LogManager.getLogger(FormInstaller.class);
 
     public FormInstaller(ApplicationProperties applicationProperties) {
         this.applicationProperties = applicationProperties;
@@ -39,7 +42,9 @@ public class FormInstaller {
 
 
     public void installForModule(String moduleName) {
-        System.out.println(String.format("Installing Forms for %s", moduleName));
+        String message = String.format("Installing Forms for %s", moduleName);
+        System.out.println(message);
+        logger.info(message);
         File moduleDirectory = new File(applicationProperties.getIndiaDistroModulesDir(), moduleName);
         File formsDirectory = new File(moduleDirectory, FORM_DIRECTORY);
 
@@ -47,11 +52,14 @@ public class FormInstaller {
         if (null == files) return;
         for (File file : files) {
             try {
-                System.out.println(String.format("Starting upload for file %s", file.getName()));
+                String debugMessage = String.format("Starting upload for file %s", file.getName());
+                System.out.println(debugMessage);
+                logger.debug(debugMessage);
                 uploadForm(file);
             } catch (IOException e) {
-                //log error
-                System.out.println(String.format("Problem while uploading file %s as form", file.getName()));
+                String errorMessage = String.format("Problem while uploading file %s as form", file.getName());
+                logger.error(errorMessage);
+                System.out.println(errorMessage);
             }
         }
     }
@@ -75,7 +83,9 @@ public class FormInstaller {
     }
 
     private String uploadFormMetadata(String formName) {
-        System.out.println("Uploading form metadata");
+        String message = "Uploading form metadata";
+        System.out.println(message);
+        logger.debug(message);
         try {
             BahmniForm form = new BahmniForm(formName, "1", false);
             String formMetadataSaveResponse = postToURL(form, OPENMRS_FORM_URL, HttpStatus.SC_CREATED);
@@ -87,7 +97,9 @@ public class FormInstaller {
 
     private BahmniFormResource uploadFormResource(String formName, Map<String, Object> value, String uuid) {
         try {
-            System.out.println("Uploading form resource");
+            String message = "Uploading form resource";
+            System.out.println(message);
+            logger.debug(message);
             value.put("uuid", uuid);
 
             BahmniForm bahmniForm = new BahmniForm();
@@ -106,7 +118,9 @@ public class FormInstaller {
     }
 
     private void uploadFormTranslations(List<Map<String, Object>> translations, BahmniFormResource formSaveResponse) {
-        System.out.println("Uploading form translations");
+        String message = "Uploading form translations";
+        logger.debug(message);
+        System.out.println(message);
         translations.forEach(formTranslation -> {
             String version = formSaveResponse.getForm().getVersion();
             if (StringUtils.isNotBlank(version)) {
@@ -121,7 +135,9 @@ public class FormInstaller {
     }
 
     private void publishForm(String formName, String uuid) {
-        System.out.println("Publishing form");
+        String message = "Publishing form";
+        logger.debug(message);
+        System.out.println(message);
         String iePublishFormURL = String.format(IE_PUBLISH_FORM_URL_FORMAT, uuid);
         try {
             postToURL(null, iePublishFormURL, HttpStatus.SC_OK);
