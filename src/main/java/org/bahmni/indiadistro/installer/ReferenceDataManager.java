@@ -6,6 +6,8 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.logging.log4j.LogManager;
@@ -33,6 +35,7 @@ public class ReferenceDataManager {
     private static final String CONCEPT_UPLOAD_URL_PATH = "admin/upload/concept";
     private static final String CONCEPT_SET_UPLOAD_URL_PATH = "admin/upload/conceptset";
     private static final String UPLOAD_STATUS_URL_PATH = "admin/upload/status";
+    static final String REBUILD_SEARCH_INDEX_PATH = "openmrs/admin/maintenance/rebuildSearchIndex.htm";
 
     private ApplicationProperties applicationProperties;
 
@@ -50,6 +53,7 @@ public class ReferenceDataManager {
         uploadRefTerms(moduleDirectory);
         uploadConcepts(moduleDirectory);
         uploadConceptSets(moduleDirectory);
+        rebuildSearchIndexes();
     }
 
     private void uploadRefTerms(File modulesDir) {
@@ -126,6 +130,34 @@ public class ReferenceDataManager {
             String message = String.format("Upload for %s finished", type);
             logger.debug(message);
             System.out.println(message);
+        }
+    }
+
+    private void rebuildSearchIndexes() {
+        String rebuildSearchIndexURL = String.format("%s/%s",
+                removeSuffix(applicationProperties.getOpenmrsBaseURL(), "/"), REBUILD_SEARCH_INDEX_PATH);
+
+        try {
+            postForRebuild(rebuildSearchIndexURL);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    private void postForRebuild(String rebuildSearchIndexURL) throws IOException {
+        CloseableHttpClient httpClient = createAcceptSelfSignedCertificateClient();
+        HttpPost request = new HttpPost(URI.create(rebuildSearchIndexURL));
+        addBasicAuth(request, applicationProperties);
+
+        request.addHeader("Content-Type", "application/json");
+        StringEntity entity = new StringEntity("{}", ContentType.APPLICATION_JSON);
+        request.setEntity(entity);
+
+        CloseableHttpResponse httpResponse = httpClient.execute(request);
+        int statusCode = httpResponse.getStatusLine().getStatusCode();
+        if (200 != statusCode) {
+            throw new IOException(String.format("Unexpected Response code %s while rebuilding the search indexes", statusCode));
         }
     }
 
