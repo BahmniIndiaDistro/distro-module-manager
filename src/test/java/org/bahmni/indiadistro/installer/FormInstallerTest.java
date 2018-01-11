@@ -9,18 +9,23 @@ import org.bahmni.indiadistro.TestUtil;
 import org.bahmni.indiadistro.config.ApplicationProperties;
 import org.bahmni.indiadistro.model.BahmniForm;
 import org.bahmni.indiadistro.model.BahmniFormResource;
+import org.bahmni.indiadistro.model.ConceptResponse;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.mockito.AdditionalAnswers;
+import org.mockito.Mockito;
 
 import java.io.File;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.bahmni.indiadistro.installer.FormInstaller.*;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.when;
 
 public class FormInstallerTest {
     private ApplicationProperties applicationProperties;
@@ -47,7 +52,10 @@ public class FormInstallerTest {
 
         env.put("INDIA_DISTRO_MODULES_DIR", src.getAbsolutePath());
         applicationProperties = new ApplicationProperties(env);
-        formInstaller = new FormInstaller(applicationProperties);
+
+        ConceptUUIDManager conceptUUIDManager = Mockito.mock(ConceptUUIDManager.class);
+        when(conceptUUIDManager.updateUUIDs(anyString())).then(AdditionalAnswers.returnsFirstArg());
+        formInstaller = new FormInstaller(conceptUUIDManager, applicationProperties);
     }
 
     @Test

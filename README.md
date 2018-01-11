@@ -10,7 +10,7 @@ git clone git@github.com:BahmniIndiaDistro/distro-module-manager.git
 cd distro-module-manager
 
 #Build the RPM using gradle
-./gradlw clean dist
+./gradlew clean dist
 
 #Copy the RPM to the bahmni box, Assuming you have a vagrant box running on 192.168.33.10
 scp build/distributions/distro-module-manager-0.1.noarch.rpm vagrant@192.168.33.20:/tmp
@@ -25,7 +25,7 @@ rpm -i distro-module-manager-0.1.noarch.rpm
  
 
 #### How to use
-Before using the service you need to make changes to `/etc/defaule/distro-module-manager` file. This will be used as configuration file.
+Before using the service you need to make changes to `/etc/default/distro-module-manager` file. This will be used as configuration file.
 Below are the config options in the file. They have been given values based on conventions. The values written with `<>` need to be replaced.
 ```
 INDIA_DISTRO_MODULES_DIR=/opt/distro-module-manager/distro/modules
@@ -36,7 +36,7 @@ OPENMRS_API_PASSWORD=<12345>
 WAIT_INTERVAL_FOR_CSV_UPLOAD=3000
 LOG_LEVEL=DEBUG
 ```
-
+Since installing a module requires copying few files to different locations, you need to switch to root user while running the service.
 Before using the service, you will need to source the configuration file. As of now the service doesn't run continuously and need to be invoked manually.
 ```
 source /etc/default/distro-module-manager
