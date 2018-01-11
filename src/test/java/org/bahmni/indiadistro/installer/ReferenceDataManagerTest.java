@@ -19,7 +19,6 @@ import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
-import static org.bahmni.indiadistro.installer.ReferenceDataManager.REBUILD_SEARCH_INDEX_PATH;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -63,21 +62,12 @@ public class ReferenceDataManagerTest {
         stubForCSVUpload("conceptset");
         stubForUploadStatusFinished("COMPLETED", null);
 
-        String rebuildSearchIndexsPath = "/" + REBUILD_SEARCH_INDEX_PATH;
-        stubFor(post(urlEqualTo(rebuildSearchIndexsPath))
-                .withBasicAuth(applicationProperties.getOpenmrsAPIUserName(), applicationProperties.getOpenmrsAPIUserPassword())
-                .willReturn(aResponse().withStatus(HttpStatus.SC_OK))
-        );
-
-
         referenceDataManager.uploadForModule("htn");
 
         verify(1, postRequestedFor(urlMatching(csvUploadURLPrefix + "concept")));
         verify(1, postRequestedFor(urlMatching(csvUploadURLPrefix + "referenceterms")));
         verify(1, postRequestedFor(urlMatching(csvUploadURLPrefix + "conceptset")));
         verify(3, getRequestedFor(urlMatching(csvUploadURLPrefix + "status")));
-        verify(1, postRequestedFor(urlMatching(rebuildSearchIndexsPath)));
-        ;
     }
 
     @Test(expected = RuntimeException.class)
@@ -100,19 +90,12 @@ public class ReferenceDataManagerTest {
         scenariosForConcepts();
         scenariosForConceptSets();
 
-        String rebuildSearchIndexsPath = "/" + REBUILD_SEARCH_INDEX_PATH;
-        stubFor(post(urlEqualTo(rebuildSearchIndexsPath))
-                .withBasicAuth(applicationProperties.getOpenmrsAPIUserName(), applicationProperties.getOpenmrsAPIUserPassword())
-                .willReturn(aResponse().withStatus(HttpStatus.SC_OK))
-        );
-
         referenceDataManager.uploadForModule("htn");
 
         verify(1, postRequestedFor(urlMatching(csvUploadURLPrefix + "referenceterms")));
         verify(1, postRequestedFor(urlMatching(csvUploadURLPrefix + "concept")));
         verify(1, postRequestedFor(urlMatching(csvUploadURLPrefix + "concept")));
         verify(4, getRequestedFor(urlMatching(csvUploadURLPrefix + "status")));
-        verify(1, postRequestedFor(urlMatching(rebuildSearchIndexsPath)));
     }
 
     @Test
