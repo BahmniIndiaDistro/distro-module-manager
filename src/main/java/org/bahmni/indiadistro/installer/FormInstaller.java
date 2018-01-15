@@ -32,12 +32,10 @@ public class FormInstaller {
     static final String IE_PUBLISH_FORM_URL_FORMAT = "/openmrs/ws/rest/v1/bahmniie/form/publish?formUuid=%s";
 
     private final ObjectMapper objectMapper;
-    private ConceptUUIDManager conceptUUIDManager;
     private ApplicationProperties applicationProperties;
     private static final Logger logger = LogManager.getLogger(FormInstaller.class);
 
-    public FormInstaller(ConceptUUIDManager conceptUUIDManager, ApplicationProperties applicationProperties) {
-        this.conceptUUIDManager = conceptUUIDManager;
+    public FormInstaller(ApplicationProperties applicationProperties) {
         this.applicationProperties = applicationProperties;
         objectMapper = new ObjectMapper();
     }
@@ -78,7 +76,7 @@ public class FormInstaller {
         List<Map<String, Object>> resources = (List<Map<String, Object>>) formJson.get("resources");
 
         String formValue = (String) resources.get(0).get("value");
-        String formValueWithUpdatedUUIDs = conceptUUIDManager.updateUUIDs(formValue);
+        String formValueWithUpdatedUUIDs = ConceptUUIDUtil.updateUUIDs(formValue, applicationProperties);
         Map<String, Object> value = objectMapper.readValue(formValueWithUpdatedUUIDs, Map.class);
 
         String uuid = uploadFormMetadata(formName);

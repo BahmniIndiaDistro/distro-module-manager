@@ -43,16 +43,15 @@ public class ReferenceDataManagerTest {
     @Before
     public void setUp() throws Exception {
         File src = temporaryFolder.newFolder("src");
-        temporaryFolder.newFolder("src", "htn");
-        temporaryFolder.newFile("src/htn/ref_terms.csv");
-        temporaryFolder.newFile("src/htn/concepts.csv");
-        temporaryFolder.newFile("src/htn/concept_sets.csv");
+        temporaryFolder.newFolder("src", "htn", "reference-data");
+        temporaryFolder.newFile("src/htn/reference-data/reference_terms.csv");
+        temporaryFolder.newFile("src/htn/reference-data/concepts.csv");
+        temporaryFolder.newFile("src/htn/reference-data/concept_sets.csv");
 
         env.put("INDIA_DISTRO_MODULES_DIR", src.getAbsolutePath());
         applicationProperties = new ApplicationProperties(env);
         objectMapper = new ObjectMapper();
         referenceDataManager = new ReferenceDataManager(applicationProperties);
-
     }
 
     @Test

@@ -24,14 +24,17 @@ import static org.bahmni.indiadistro.util.StringUtil.removePrefix;
 import static org.bahmni.indiadistro.util.StringUtil.removeSuffix;
 
 public class ReferenceDataManager {
-    private static final String REFERENCE_TERM_FILE_PATH = "ref_terms.csv";
+    private static final String REFERENCE_DATA_DIRECTORY = "reference-data";
+    private static final String REFERENCE_TERM_FILE_PATH = "reference_terms.csv";
     private static final String CONCEPT_FILE_PATH = "concepts.csv";
     private static final String CONCEPT_SETS_FILE_PATH = "concept_sets.csv";
+    private static final String DRUGS_FILE_PATH = "drugs.csv";
 
     private static final String BAHMNI_CORE_CONTEXT_PATH = "openmrs/ws/rest/v1/bahmnicore";
     private static final String REF_TERM_UPLOAD_URL_PATH = "admin/upload/referenceterms";
     private static final String CONCEPT_UPLOAD_URL_PATH = "admin/upload/concept";
     private static final String CONCEPT_SET_UPLOAD_URL_PATH = "admin/upload/conceptset";
+    private static final String DRUG_UPLOAD_URL_PATH = "admin/upload/drug";
     private static final String UPLOAD_STATUS_URL_PATH = "admin/upload/status";
 
     private ApplicationProperties applicationProperties;
@@ -47,9 +50,12 @@ public class ReferenceDataManager {
         System.out.println(message);
         logger.info(message);
         File moduleDirectory = new File(applicationProperties.getIndiaDistroModulesDir(), moduleName);
-        uploadRefTerms(moduleDirectory);
-        uploadConcepts(moduleDirectory);
-        uploadConceptSets(moduleDirectory);
+        File refDataDirectory = new File(moduleDirectory, REFERENCE_DATA_DIRECTORY);
+
+        uploadRefTerms(refDataDirectory);
+        uploadConcepts(refDataDirectory);
+        uploadConceptSets(refDataDirectory);
+        uploadDrugs(refDataDirectory);
     }
 
     private void uploadRefTerms(File modulesDir) {
@@ -71,6 +77,20 @@ public class ReferenceDataManager {
     private void uploadConceptSets(File modulesDir) {
         try {
             uploadAndCheckStatus(modulesDir, CONCEPT_SETS_FILE_PATH, CONCEPT_SET_UPLOAD_URL_PATH, "Concept Sets");
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException("Problem while uploading the Concept Sets", e);
+        }
+    }
+
+    private void uploadDrugs(File modulesDir) {
+        try {
+            if (!new File(modulesDir, DRUGS_FILE_PATH).exists()){
+                String message = "No Drugs to upload";
+                System.out.println(message);
+                logger.debug(message);
+                return;
+            }
+            uploadAndCheckStatus(modulesDir, DRUGS_FILE_PATH, DRUG_UPLOAD_URL_PATH, "Drug");
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException("Problem while uploading the Concept Sets", e);
         }

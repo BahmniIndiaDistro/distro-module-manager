@@ -29,10 +29,9 @@ public class ModuleManager {
         logger.info(message);
 
         ApplicationProperties applicationProperties = new ApplicationProperties(System.getenv());
-        ConceptUUIDManager conceptUUIDManager = new ConceptUUIDManager(applicationProperties);
 
         new ReferenceDataManager(applicationProperties).uploadForModule(moduleName);
-        new FormInstaller(conceptUUIDManager, applicationProperties).installForModule(moduleName);
+        new FormInstaller(applicationProperties).installForModule(moduleName);
         new DashboardInstaller(applicationProperties).installForModule(moduleName);
         new ReportsInstaller(applicationProperties).installForModule(moduleName);
         new AnalyticsInstaller(applicationProperties).installForModule(moduleName);

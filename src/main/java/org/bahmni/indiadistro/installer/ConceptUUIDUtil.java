@@ -21,15 +21,10 @@ import java.util.Map;
 
 import static org.bahmni.indiadistro.util.HttpUtil.*;
 
-public class ConceptUUIDManager {
+public class ConceptUUIDUtil {
     private static final String CONCEPT_DETAILS_URL_FORMAT = "%s/openmrs/ws/rest/v1/concept?q=%s&source=byFullySpecifiedName&v=custom:(uuid,name:(name))";
-    private ApplicationProperties applicationProperties;
 
-    public ConceptUUIDManager(ApplicationProperties applicationProperties) {
-        this.applicationProperties = applicationProperties;
-    }
-
-    public String updateUUIDs(String formValue) {
+    public static String updateUUIDs(String formValue, ApplicationProperties applicationProperties) {
         JsonProvider jsonProvider = Configuration.defaultConfiguration().jsonProvider();
         Object document = jsonProvider.parse(formValue);
 

@@ -16,16 +16,15 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
-import org.mockito.AdditionalAnswers;
-import org.mockito.Mockito;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.bahmni.indiadistro.installer.FormInstaller.*;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.when;
 
 public class FormInstallerTest {
     private ApplicationProperties applicationProperties;
@@ -53,14 +52,24 @@ public class FormInstallerTest {
         env.put("INDIA_DISTRO_MODULES_DIR", src.getAbsolutePath());
         applicationProperties = new ApplicationProperties(env);
 
-        ConceptUUIDManager conceptUUIDManager = Mockito.mock(ConceptUUIDManager.class);
-        when(conceptUUIDManager.updateUUIDs(anyString())).then(AdditionalAnswers.returnsFirstArg());
-        formInstaller = new FormInstaller(conceptUUIDManager, applicationProperties);
+        formInstaller = new FormInstaller(applicationProperties);
     }
 
     @Test
     public void shouldUploadForm() throws Exception {
         String publishUrl = String.format(IE_PUBLISH_FORM_URL_FORMAT, "xyz");
+
+        String questionConcept = "QuestionConcept";
+        String uuidForQuestionConcept = "UUIDForQuestionConcept";
+        stubForConceptUUID(questionConcept, uuidForQuestionConcept, applicationProperties);
+
+        String answerConcept = "AnswerConcept";
+        String uuidForAnswerConcept = "UUIDForAnswerConcept";
+        stubForConceptUUID(answerConcept, uuidForAnswerConcept, applicationProperties);
+
+        String bodyWeight = "BodyWeight";
+        String uuidForBodyWeight = "UUIDForBodyWeight";
+        stubForConceptUUID(bodyWeight, uuidForBodyWeight, applicationProperties);
 
         BahmniForm form = new BahmniForm("foo", "1", false);
         BahmniFormResource bahmniFormResource = new BahmniFormResource();
@@ -87,6 +96,22 @@ public class FormInstallerTest {
                 .willReturn(
                         aResponse().withStatus(status)
                                 .withBody(responseBody)
+                )
+        );
+    }
+
+    private void stubForConceptUUID(String conceptName, String conceptUUID, ApplicationProperties applicationProperties) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        ConceptResponse conceptResponse = new ConceptResponse(conceptName, conceptUUID);
+        HashMap<String, Object> map = new HashMap<>();
+        map.put("results", Arrays.asList(conceptResponse));
+
+        String urlFormat = "/openmrs/ws/rest/v1/concept?q=%s&source=byFullySpecifiedName&v=custom:(uuid,name:(name))";
+        stubFor(get(urlEqualTo(String.format(urlFormat, conceptName)))
+                .withBasicAuth(applicationProperties.getOpenmrsAPIUserName(), applicationProperties.getOpenmrsAPIUserPassword())
+                .willReturn(
+                        aResponse().withStatus(HttpStatus.SC_OK)
+                                .withBody(objectMapper.writeValueAsString(map))
                 )
         );
     }
