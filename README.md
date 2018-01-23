@@ -13,7 +13,7 @@ cd distro-module-manager
 ./gradlew clean dist
 
 #Copy the RPM to the bahmni box, Assuming you have a vagrant box running on 192.168.33.10
-scp build/distributions/distro-module-manager-0.1.noarch.rpm vagrant@192.168.33.20:/tmp
+scp build/distributions/distro-module-manager-0.1.noarch.rpm vagrant@192.168.33.10:/tmp
 
 #SSH into vagrant machine. Go to the temp folder and install the RPM
 ssh vagrant@192.169.33.10
